@@ -4,7 +4,7 @@
 
 It escalates when it cannot verify an answer, turns human fixes into reusable memory, proposes its own harness changes as reviewable diffs, and proves whether any of it worked with a benchmark pinned to a commit SHA.
 
-> **Result:** 3/14 (21.4%) → 6/14 (42.9%) → 13/14 (92.9%) across three harness versions, with zero escalations in the final run. Details and caveats below.
+> **Result:** 3/14 (21.4%) → 6/14 (42.9%) → 13/14 (92.9%) → 14/14 (100%) across four harness versions, with zero escalations in the last two runs. Details and caveats below.
 
 ![Nina's question escalates to Ticket #5 with a full tool trace](docs/screenshots/06-chat-escalation.png)
 
@@ -31,15 +31,16 @@ The product surface is a dark-mode Studio with four tabs: Chat, Team Inbox, Cont
 |---|---|---|---|---|
 | v0 baseline | `65bb791` | 3/14 | 21.4% | 10 |
 | after Loop 1 | `44cfd2f` | 6/14 | 42.9% | 6 |
-| after Loop 2 | `6135360` | 13/14 | **92.9%** | 0 |
+| after Loop 2 | `6135360` | 13/14 | 92.9% | 0 |
+| after final-answer fix | `f1a1925` | **14/14** | **100%** | **0** |
 
-| Category | v0 | v1 | v2 |
-|---|---|---|---|
-| v0-baseline | 3/4 | 4/4 | 4/4 |
-| worktree-origin-main | 0/4 | 2/4 | 3/4 |
-| env-isolation | 0/2 | 0/2 | 2/2 |
-| monorepo-cwd | 0/2 | 0/2 | 2/2 |
-| pr-draft-lock | 0/2 | 0/2 | 2/2 |
+| Category | v0 | v1 | v2 | v3 |
+|---|---|---|---|---|
+| v0-baseline | 3/4 | 4/4 | 4/4 | 4/4 |
+| worktree-origin-main | 0/4 | 2/4 | 3/4 | 4/4 |
+| env-isolation | 0/2 | 0/2 | 2/2 | 2/2 |
+| monorepo-cwd | 0/2 | 0/2 | 2/2 | 2/2 |
+| pr-draft-lock | 0/2 | 0/2 | 2/2 | 2/2 |
 
 ![Eval scoreboard](docs/screenshots/05-eval-scoreboard.png)
 
@@ -47,13 +48,13 @@ The product surface is a dark-mode Studio with four tabs: Chat, Team Inbox, Cont
 
 1. **Loop 1** resolved Nina's escalation into `/memory/cases/case-005-archon-worktree-origin-main.md`, a global rule in `/memory/AGENTS.md`, and a private note in `/memory/users/nina/AGENTS.md` — one commit (`44cfd2f`). Omar's and Alex's related worktree questions then passed without escalation. Nina's own question still got a terse recap.
 2. **Loop 2** analyzed the latest eight traces and proposed a 23-line diff to `skills/archon-workflow-runner/SKILL.md` covering worktree origin, `.archon/.env` isolation, `--workspace-root`, and `archon worktree prune --force`. Approved and applied as `6135360`; the six remaining questions across env isolation, monorepos, and lock recovery all passed.
+3. **The final fix came from the eval, not from a feature request.** At v2, Q5 still failed because the agent called `update_user_memory` and ended the turn with “I've noted this in your profile…” — the substantive answer was dropped. The same bug caused Q1 to fail at v0. A new rule in `INSTRUCTIONS.md` (`f1a1925`) requires the final message to restate the complete answer after any tool call. v3: 14/14.
 
 ### Honest caveats
 
-- **This is a 14-question scenario benchmark, not a general capability claim.** It is the same set the project was built against and there is no held-out split yet. The Loop 2 prompt names the failure areas, so 92.9% is an upper bound.
-- **The one residual failure is real and diagnosed.** In Q5 the agent called `update_user_memory` after composing its answer, then ended the turn with “I've noted this in your profile…” — the substantive answer was in the prior assistant message and never reached the user. The same bug caused Q1 to fail at v0.
-  The fix belongs in `INSTRUCTIONS.md`: *after any tool call, the final message must restate the complete answer; never end on an acknowledgement.* It is the next iteration, not a footnote.
-- The judge is strict: it requires the specific mechanism and command, not a plausible summary. It graded Q5 correctly.
+- **This is a 14-question scenario benchmark, not a general capability claim.** It is the same set the project was built against and there is no held-out split yet. The Loop 2 prompt names the failure areas, so 100% is an upper bound.
+- **The 14/14 is one run per state.** Temperature is 0, but provider variance exists; multiple seeds and a held-out set are the next credibility step.
+- The judge is strict: it requires the specific mechanism and command, not a plausible summary. It graded Q5 correctly at v2.
 
 ---
 
@@ -149,11 +150,19 @@ curl -s -X POST http://localhost:8010/api/evolution/apply/1
 curl -s -X POST http://localhost:8010/api/evals/run \
   -o benchmark/results/v2.json
 
-# 4. Scoreboard
+# 4. v3: copy rule 4 from benchmark/final-harness/INSTRUCTIONS.md into
+#    harness/INSTRUCTIONS.md, then commit and re-run
+(cd backend && .venv/bin/python -c \
+  "from app.git_hub import commit_changes; print(commit_changes('Loop 2.1: Require complete final answers after tool calls'))")
+
+curl -s -X POST http://localhost:8010/api/evals/run \
+  -o benchmark/results/v3.json
+
+# 5. Scoreboard
 python scripts/summarize_eval.py
 ```
 
-Each run takes ~80–100 seconds (14 agent calls + 14 grader calls). Results are stored in SQLite with the harness SHA and exported to `benchmark/results/`.
+Each run takes ~80–140 seconds (14 agent calls + 14 grader calls). Results are stored in SQLite with the harness SHA and exported to `benchmark/results/`.
 
 ---
 
@@ -165,7 +174,7 @@ A 3-minute script is in [`docs/DEMO.md`](docs/DEMO.md). The short version:
 2. Open Team Inbox → paste the verified fix → “Confirm Fix & Teach Agent” → case + memory + commit.
 3. Ask Omar's related question → the agent extrapolates without escalating.
 4. Evolution & Evals → “Analyze Failure Traces” → review the Markdown diff → “Approve & Apply.”
-5. Show the scoreboard: 21.4% → 42.9% → 92.9%.
+5. Show the scoreboard: 21.4% → 42.9% → 92.9% → 100%, and explain that the last jump came from a bug the eval caught.
 
 To reset to the clean demo state:
 
@@ -199,8 +208,8 @@ Low cost per benchmark run (pennies), OpenAI-compatible API, and a deliberate te
 
 ## Limitations & next
 
-- Fix the post-tool acknowledgement bug in `INSTRUCTIONS.md`, then re-run the benchmark.
 - Add a 40-question set with a 20% held-out split; report holdout accuracy separately.
+- Run each state multiple times and report variance, not a single score.
 - Stream responses; current chat calls take 15–30 s.
 - Add auth and per-IP rate limits before exposing the demo publicly.
 - Measure cost and p95 latency per conversation.
@@ -219,13 +228,13 @@ frontend/         Next.js Studio (4 tabs)
 harness/          runtime Markdown harness + its own Git repo (gitignored)
 benchmark/
   results/        raw EvalRun JSON per state
-  final-harness/  snapshot of the 92.9% harness
+  final-harness/  snapshot of the 14/14 harness
   results.md
 scripts/          dev, backup, restore, demo reset, eval summary
 docs/             demo script, interview notes, resume bullets, screenshots
 ```
 
-The `harness/` directory is runtime state with its own Git history, so it is ignored by the outer repo. The baseline is seeded from `git_hub.py`; the final evolved state is preserved in `benchmark/final-harness/` and in tags `v0-baseline`, `v1-loop1`, and `v2-l2-applied`.
+The `harness/` directory is runtime state with its own Git history, so it is ignored by the outer repo. The baseline is seeded from `git_hub.py`; the final evolved state is preserved in `benchmark/final-harness/` and in tags `v0-baseline`, `v1-loop1`, `v2-l2-applied`, and `v3-answer-fix`.
 
 ---
 

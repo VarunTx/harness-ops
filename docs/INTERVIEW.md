@@ -4,7 +4,7 @@ Answers you should be able to give without notes. Each is intentionally short; t
 
 ### 1. "What is this?"
 
-An eval-driven support agent where the prompt, skills, and memory are a Git-versioned Markdown harness. It escalates when it can't verify something, converts human fixes into reusable memory, proposes its own prompt diffs, and measures the result on a 14-question benchmark. Result: 21.4% → 42.9% → 92.9%, each run pinned to a commit SHA.
+An eval-driven support agent where the prompt, skills, and memory are a Git-versioned Markdown harness. It escalates when it can't verify something, converts human fixes into reusable memory, proposes its own prompt diffs, and measures the result on a 14-question benchmark. Result: 21.4% → 42.9% → 92.9% → 100%, each run pinned to a commit SHA.
 
 ### 2. "Isn't this just prompt engineering?"
 
@@ -16,15 +16,15 @@ At this scale there are eight harness files and a handful of cases. Injecting th
 
 ### 4. "How do you know it improved?"
 
-Three runs of the same 14-question set at temperature 0, graded by an LLM judge against ground truth, with the harness commit recorded for each. 3/14 → 6/14 → 13/14. Escalations went from 10 to 0.
+Four runs of the same 14-question set at temperature 0, graded by an LLM judge against ground truth, with the harness commit recorded for each. 3/14 → 6/14 → 13/14 → 14/14. Escalations went from 10 to 0.
 
 ### 5. "Only 14 questions? Isn't that overfit?"
 
-Yes, that's the biggest weakness. The Loop 2 prompt also names the failure categories, so 92.9% is an upper bound, not a generalization estimate. The next step is a 40-question set with a 20% held-out split and a report of holdout accuracy separately. I'd rather say that than pretend 14 is enough.
+Yes, that's the biggest weakness. The Loop 2 prompt also names the failure categories, so 100% is an upper bound, not a generalization estimate. The next step is a 40-question set with a 20% held-out split and a report of holdout accuracy separately. I'd rather say that than pretend 14 is enough.
 
-### 6. "What still fails?"
+### 6. "What failed, and how did you fix it?"
 
-Q5. The agent composes the answer, calls `update_user_memory`, and then ends the turn with "I've noted this in your profile…" — the substantive answer is in the previous assistant message and never reaches the user. Same bug made Q1 fail at v0. The fix is an instruction rule: after a tool call, the final message must restate the complete answer. The eval caught it; that's the point.
+It did fail on Q5 at v2. The agent composed the answer, called `update_user_memory`, and ended with "I've noted this in your profile…" — the answer was in the previous assistant message and never reached the user. Same bug made Q1 fail at v0. I added one rule to `INSTRUCTIONS.md`: after a tool call, the final message must restate the complete answer. Re-ran: 14/14, zero escalations. The eval found a product bug, not just a model weakness.
 
 ### 7. "How do you stop Nina reading Omar's memory?"
 
@@ -48,7 +48,7 @@ Making the measurement trustworthy. The first baseline graded Q1 as a failure th
 
 ### 12. "What would you do with two more weeks?"
 
-Fix the acknowledgement bug and re-run; add the held-out set; stream responses; add auth and rate limits; deploy with a persistent volume; measure cost and p95 latency; run the same harness on three providers.
+Add the held-out set and multiple seeds; stream responses; add auth and rate limits; deploy with a persistent volume; measure cost and p95 latency; run the same harness on three providers.
 
 ### 13. "What did you learn?"
 

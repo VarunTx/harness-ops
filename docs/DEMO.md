@@ -90,11 +90,11 @@ Point out that the trace is shorter and there is no escalation banner.
 
 Scroll to the **14-Question Eval Runner**.
 
-> "Three runs, each pinned to a harness commit: 21.4% at baseline, 42.9% after the human correction, 92.9% after the harness diff. Zero escalations in the final run."
+> "Four runs, each pinned to a harness commit: 21.4% at baseline, 42.9% after the human correction, 92.9% after the harness diff, and 100% after one more instruction fix. Zero escalations."
 
 Then the honest close:
 
-> "One question still fails. The agent writes a memory note and ends the turn with 'I've noted this in your profile' instead of restating the answer. The eval caught it; the fix is an instruction rule, and it's the next iteration. That's the point of measuring."
+> "The 13/14 wasn't good enough. The agent wrote a memory note and ended the turn with 'I've noted this in your profile' instead of restating the answer. The eval caught it, I added one rule to INSTRUCTIONS.md, re-ran, and got 14/14. That's the loop: measure, fix the harness, measure again — with the caveat that this is still a development set, not a holdout."
 
 ---
 
