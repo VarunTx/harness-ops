@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #08090b;
+  --color-foreground: #e6e8ee;
+  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background-color: #08090b;
+  background-image:
+    radial-gradient(60rem 40rem at 12% -12%, rgba(56, 189, 248, 0.07), transparent 60%),
+    radial-gradient(55rem 38rem at 88% -18%, rgba(168, 85, 247, 0.06), transparent 60%);
+  background-attachment: fixed;
+  color: #e6e8ee;
+  font-family: var(--font-sans);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2a2d36 transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2a2d36;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3a3f4b;
+}
+
+::selection {
+  background: rgba(56, 189, 248, 0.25);
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.18s ease-out;
+}
+
+details > summary::-webkit-details-marker {
+  display: none;
+}
