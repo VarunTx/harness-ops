@@ -1,6 +1,7 @@
 # HarnessOps
 
 [![CI](https://github.com/VarunTx/harness-ops/actions/workflows/ci.yml/badge.svg)](https://github.com/VarunTx/harness-ops/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/VarunTx/harness-ops?label=release)](https://github.com/VarunTx/harness-ops/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](backend/requirements.txt)
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-black.svg)](frontend/package.json)
