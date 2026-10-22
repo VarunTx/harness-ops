@@ -1,6 +1,6 @@
 # Resume Bullets
 
-**Repo:** <https://github.com/Varun-TT/harness-ops>
+**Repo:** <https://github.com/VarunTx/harness-ops>
 
 Use the version that fits the role. Numbers are measured, not projected.
 

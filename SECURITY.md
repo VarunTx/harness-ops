@@ -6,7 +6,7 @@ HarnessOps is a single-tenant demo. It has no authentication and should not be e
 
 Please open a private security advisory on GitHub:
 
-<https://github.com/Varun-TT/harness-ops/security/advisories/new>
+<https://github.com/VarunTx/harness-ops/security/advisories/new>
 
 Do not open a public issue for a guardrail bypass, path traversal, or prompt-injection finding.
 

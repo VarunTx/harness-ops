@@ -1,6 +1,6 @@
 # HarnessOps
 
-[![CI](https://github.com/Varun-TT/harness-ops/actions/workflows/ci.yml/badge.svg)](https://github.com/Varun-TT/harness-ops/actions/workflows/ci.yml)
+[![CI](https://github.com/VarunTx/harness-ops/actions/workflows/ci.yml/badge.svg)](https://github.com/VarunTx/harness-ops/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](backend/requirements.txt)
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-black.svg)](frontend/package.json)
@@ -125,7 +125,7 @@ See `backend/tests/test_core.py`.
 ## Quickstart
 
 ```bash
-git clone https://github.com/Varun-TT/harness-ops.git
+git clone https://github.com/VarunTx/harness-ops.git
 cd harness-ops
 
 make setup
