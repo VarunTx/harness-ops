@@ -16,11 +16,11 @@ At this scale there are eight harness files and a handful of cases. Injecting th
 
 ### 4. "How do you know it improved?"
 
-Four runs of the same 14-question set at temperature 0, graded by an LLM judge against ground truth, with the harness commit recorded for each. 3/14 → 6/14 → 13/14 → 14/14. Escalations went from 10 to 0.
+Four runs of the same 14-question set at temperature 0, graded by an LLM judge against ground truth, with the harness commit recorded for each. 3/14 → 6/14 → 13/14 → 14/14. Escalations went from 10 to 0. I also ran a separate 10-question holdout: 2/10 at baseline, 10/10 at the final harness.
 
 ### 5. "Only 14 questions? Isn't that overfit?"
 
-Yes, that's the biggest weakness. The Loop 2 prompt also names the failure categories, so 100% is an upper bound, not a generalization estimate. The next step is a 40-question set with a 20% held-out split and a report of holdout accuracy separately. I'd rather say that than pretend 14 is enough.
+It was, which is why I added a held-out set. The development score is an upper bound because Loop 2 is told the failure areas. The separate 10-question holdout — written after the harness was frozen and never shown to Loop 2 — went from 2/10 at baseline to 10/10 at the final. That's better evidence, but ten same-domain paraphrases are still a smoke test. The next step is 40+ questions and multiple seeds.
 
 ### 6. "What failed, and how did you fix it?"
 

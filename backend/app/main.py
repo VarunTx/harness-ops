@@ -1,4 +1,6 @@
 import json
+import os
+from contextlib import asynccontextmanager
 from typing import Optional
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,6 +11,7 @@ from app.database import engine, init_db
 from app.models import ChatMessageRecord, EscalationTicket, EvolutionProposal, EvalRun
 from app.git_hub import (
     ensure_harness_initialized,
+    get_current_sha,
     list_harness_files,
     list_commits,
     rollback_to_commit,
@@ -18,21 +21,47 @@ from app.memory_synthesizer import resolve_ticket_and_learn
 from app.evolution_engine import analyze_traces_and_propose, apply_evolution_proposal
 from app.eval_runner import run_eval_benchmark
 
-app = FastAPI(title="HarnessOps API")
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    ensure_harness_initialized()
+    init_db()
+    yield
 
+
+app = FastAPI(title="HarnessOps API", version="1.0.0", lifespan=lifespan)
+
+_allowed_origins = [
+    origin.strip()
+    for origin in os.getenv("ALLOWED_ORIGINS", "*").split(",")
+    if origin.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=_allowed_origins,
+    allow_credentials=_allowed_origins != ["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-@app.on_event("startup")
-def on_startup():
-    ensure_harness_initialized()
-    init_db()
+@app.get("/api/health")
+def health():
+    database_ok = True
+    try:
+        with Session(engine) as session:
+            session.exec(select(EscalationTicket)).first()
+    except Exception:
+        database_ok = False
+    try:
+        harness_sha = get_current_sha()
+    except Exception:
+        harness_sha = None
+    return {
+        "status": "ok" if database_ok else "degraded",
+        "version": app.version,
+        "database": database_ok,
+        "harness_sha": harness_sha,
+    }
 
 
 class ChatRequest(BaseModel):
@@ -168,6 +197,9 @@ def get_eval_runs():
 
 
 @app.post("/api/evals/run")
-def trigger_eval_run():
-    run_record = run_eval_benchmark()
+def trigger_eval_run(dataset: str = "dev"):
+    try:
+        run_record = run_eval_benchmark(dataset=dataset)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     return run_record

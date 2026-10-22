@@ -1,0 +1,72 @@
+[
+  {
+    "id": 1,
+    "category": "v0-baseline",
+    "user_id": "alex",
+    "question": "I just installed the Archon CLI. What is the first command I should run inside my new repository?",
+    "ground_truth": "Run `archon init` at the repository root. It creates the `.archon/` configuration directory where Archon looks for workflows."
+  },
+  {
+    "id": 2,
+    "category": "v0-baseline",
+    "user_id": "omar",
+    "question": "How do I start a workflow named `deploy` that I defined in my repo?",
+    "ground_truth": "Run `archon workflow run deploy`. Custom workflows are stored as Markdown files in `.archon/commands/`."
+  },
+  {
+    "id": 3,
+    "category": "worktree-origin-main",
+    "user_id": "nina",
+    "question": "A teammate merged a hotfix to main this morning, but my Archon run still checked out an older commit.",
+    "ground_truth": "Archon creates its execution worktree from `origin/main`, not your local copy. Make sure the hotfix is pushed to `origin/main` (run `git push` if needed), then re-run the workflow."
+  },
+  {
+    "id": 4,
+    "category": "worktree-origin-main",
+    "user_id": "alex",
+    "question": "I amended my last commit locally and re-ran the workflow, but the PR it opened does not contain the amended change.",
+    "ground_truth": "Archon builds the worktree from `origin/main`, so local commits that were not pushed are ignored. Push the amended commit (for example `git push --force-with-lease`) and re-run the workflow."
+  },
+  {
+    "id": 5,
+    "category": "env-isolation",
+    "user_id": "omar",
+    "question": "Our deploy step needs `NPM_TOKEN`, which I exported in my shell profile, but Archon reports it as missing.",
+    "ground_truth": "Archon runs steps in an isolated environment and does not inherit shell exports. Add `NPM_TOKEN` to `.archon/.env` or whitelist it under `env_passthrough` in `.archon/config.yaml`."
+  },
+  {
+    "id": 6,
+    "category": "env-isolation",
+    "user_id": "nina",
+    "question": "Does exporting a variable in the same terminal make it visible inside an Archon workflow step?",
+    "ground_truth": "No. Workflow steps run in a clean sandbox that does not inherit your terminal environment. Put the variable in `.archon/.env` or add it to `env_passthrough` in `.archon/config.yaml`."
+  },
+  {
+    "id": 7,
+    "category": "monorepo-cwd",
+    "user_id": "alex",
+    "question": "I am inside `services/billing` and Archon cannot find `.archon/commands`, even though the directory exists at the repository root.",
+    "ground_truth": "Archon resolves `.archon/` from the repository root. Pass `--workspace-root` to `archon workflow run`, or run the command from the repository root."
+  },
+  {
+    "id": 8,
+    "category": "monorepo-cwd",
+    "user_id": "nina",
+    "question": "Can I run Archon from `packages/api` and still use the `.archon` configuration at the monorepo root?",
+    "ground_truth": "Yes. Run `archon workflow run <name> --workspace-root` so the CLI locates `.archon/` at the repository root, or change to the root directory first."
+  },
+  {
+    "id": 9,
+    "category": "pr-draft-lock",
+    "user_id": "omar",
+    "question": "A CI job killed an Archon run, and now the next run fails with `PR_BRANCH_LOCKED_BY_PREVIOUS_RUN`.",
+    "ground_truth": "The interrupted run left a stale worktree lock. Run `archon worktree prune --force` to clear it, then retry the workflow."
+  },
+  {
+    "id": 10,
+    "category": "pr-draft-lock",
+    "user_id": "alex",
+    "question": "We have orphaned worktrees after a failed Archon run. Is there a cleanup command?",
+    "ground_truth": "Run `archon worktree prune --force` to remove orphaned worktrees and their locks before retrying."
+  }
+]

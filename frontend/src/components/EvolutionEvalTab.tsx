@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   AlertTriangle,
   ArrowRight,
@@ -72,6 +72,7 @@ export function EvolutionEvalTab() {
   );
   const [runs, setRuns] = useState<EvalRun[]>([]);
   const [selectedRunId, setSelectedRunId] = useState<number | null>(null);
+  const [datasetFilter, setDatasetFilter] = useState<"dev" | "holdout">("dev");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
@@ -136,12 +137,16 @@ export function EvolutionEvalTab() {
 
   const selectedProposal =
     proposals.find((proposal) => proposal.id === selectedProposalId) ?? null;
-  const selectedRun = runs.find((run) => run.id === selectedRunId) ?? null;
-  const selectedDetails = useMemo(
-    () => (selectedRun ? parseDetails(selectedRun) : []),
-    [selectedRun],
+  const visibleRuns = runs.filter(
+    (run) => (run.dataset ?? "dev") === datasetFilter,
   );
-  const latestRun = runs.length ? runs[runs.length - 1] : null;
+  const selectedRun =
+    visibleRuns.find((run) => run.id === selectedRunId) ??
+    (visibleRuns.length ? visibleRuns[visibleRuns.length - 1] : null);
+  const selectedDetails = selectedRun ? parseDetails(selectedRun) : [];
+  const latestRun = visibleRuns.length
+    ? visibleRuns[visibleRuns.length - 1]
+    : null;
 
   async function analyze() {
     if (analyzing) return;
@@ -432,6 +437,33 @@ export function EvolutionEvalTab() {
                 {latestRun.accuracy_pct}% latest
               </Pill>
             ) : null}
+            <div className="ml-1 flex rounded-lg border border-white/10 bg-white/[0.03] p-0.5">
+              {(["dev", "holdout"] as const).map((dataset) => {
+                const count = runs.filter(
+                  (run) => (run.dataset ?? "dev") === dataset,
+                ).length;
+                const active = datasetFilter === dataset;
+                return (
+                  <button
+                    key={dataset}
+                    type="button"
+                    onClick={() => {
+                      setDatasetFilter(dataset);
+                      setSelectedRunId(null);
+                    }}
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium capitalize transition",
+                      active
+                        ? "bg-white/10 text-zinc-100"
+                        : "text-zinc-500 hover:text-zinc-300",
+                    )}
+                  >
+                    {dataset}
+                    <span className="text-[9px] text-zinc-600">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
           <button
             type="button"
@@ -452,8 +484,13 @@ export function EvolutionEvalTab() {
 
         <p className="border-b border-white/5 px-4 py-2 text-[11px] text-zinc-500">
           Grades the live harness against{" "}
-          <span className="font-mono text-zinc-400">eval_dataset.json</span> with
-          an LLM judge · ~28 calls · results pinned to the harness commit SHA.
+          <span className="font-mono text-zinc-400">
+            {datasetFilter === "holdout"
+              ? "holdout_dataset.json"
+              : "eval_dataset.json"}
+          </span>{" "}
+          with an LLM judge · results pinned to the harness commit SHA. The
+          button always runs the development set.
         </p>
 
         {runningEvals ? (
@@ -471,11 +508,19 @@ export function EvolutionEvalTab() {
         ) : null}
 
         <div className="p-4">
-          {!runs.length ? (
+          {!visibleRuns.length ? (
             <EmptyState
               icon={<FlaskConical size={18} />}
-              title="No benchmark runs yet"
-              description="Run the suite to establish the v0 baseline (expect ~4/14 ≈ 28.6%)."
+              title={
+                datasetFilter === "holdout"
+                  ? "No holdout runs yet"
+                  : "No benchmark runs yet"
+              }
+              description={
+                datasetFilter === "holdout"
+                  ? "Holdout runs are executed from the API with `?dataset=holdout` so the harness is never tuned against them."
+                  : "Run the suite to establish the v0 baseline (expect ~4/14 ≈ 28.6%)."
+              }
               action={
                 <button
                   type="button"
@@ -497,8 +542,8 @@ export function EvolutionEvalTab() {
                   Accuracy over harness versions
                 </div>
                 <div className="flex items-end gap-3 overflow-x-auto rounded-xl border border-white/10 bg-black/25 px-4 pb-3 pt-4">
-                  {runs.map((run) => {
-                    const active = run.id === selectedRunId;
+                  {visibleRuns.map((run) => {
+                    const active = run.id === selectedRun?.id;
                     const tone = accuracyTone(run.accuracy_pct);
                     return (
                       <button
@@ -559,6 +604,7 @@ export function EvolutionEvalTab() {
                       <span className="text-xs font-semibold text-zinc-100">
                         Run #{selectedRun.id}
                       </span>
+                      <Pill tone="violet">{selectedRun.dataset ?? "dev"}</Pill>
                       <Pill tone={accuracyTone(selectedRun.accuracy_pct)}>
                         {selectedRun.passed_count}/{selectedRun.total_questions}{" "}
                         passed · {selectedRun.accuracy_pct}%

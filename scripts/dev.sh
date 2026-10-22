@@ -4,8 +4,27 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-BACKEND_PORT="${BACKEND_PORT:-8010}"
+
+if [[ -z "${BACKEND_PORT:-}" ]]; then
+  for candidate in 8000 8010 8020 8030; do
+    if ! lsof -nP -iTCP:"$candidate" -sTCP:LISTEN >/dev/null 2>&1; then
+      BACKEND_PORT="$candidate"
+      break
+    fi
+  done
+fi
+BACKEND_PORT="${BACKEND_PORT:-8000}"
+
+if [[ -z "${FRONTEND_PORT:-}" ]]; then
+  for candidate in 3001 3002 3003 3004; do
+    if ! lsof -nP -iTCP:"$candidate" -sTCP:LISTEN >/dev/null 2>&1; then
+      FRONTEND_PORT="$candidate"
+      break
+    fi
+  done
+fi
 FRONTEND_PORT="${FRONTEND_PORT:-3001}"
+
 API_BASE="${NEXT_PUBLIC_API_BASE:-http://localhost:$BACKEND_PORT}"
 
 if [[ ! -x "$ROOT/backend/.venv/bin/uvicorn" ]]; then

@@ -4,7 +4,7 @@
 
 ```bash
 ./scripts/demo-reset.sh          # baseline harness, 4 tickets, empty chat
-./scripts/dev.sh                 # API :8010, Studio :3001
+./scripts/dev.sh                 # starts API + Studio; use the URLs it prints
 ```
 
 Open http://localhost:3001. Confirm:
@@ -94,7 +94,7 @@ Scroll to the **14-Question Eval Runner**.
 
 Then the honest close:
 
-> "The 13/14 wasn't good enough. The agent wrote a memory note and ended the turn with 'I've noted this in your profile' instead of restating the answer. The eval caught it, I added one rule to INSTRUCTIONS.md, re-ran, and got 14/14. That's the loop: measure, fix the harness, measure again — with the caveat that this is still a development set, not a holdout."
+> "The 13/14 wasn't good enough. The agent wrote a memory note and ended the turn with 'I've noted this in your profile' instead of restating the answer. The eval caught it, I added one rule to INSTRUCTIONS.md, re-ran, and got 14/14. The separate holdout — questions written after the harness was frozen — went from 2/10 to 10/10. Still a small set, but it's evidence beyond the exact questions I tuned on."
 
 ---
 
@@ -102,7 +102,7 @@ Then the honest close:
 
 | Symptom | Recovery |
 |---|---|
-| API offline | `./scripts/dev.sh`; check port 8010 |
+| API offline | `./scripts/dev.sh`; check the API port it printed |
 | Chat is slow | Keep talking; the call takes 15–30 s |
 | Analyze fails | Show proposal #1 in the list — it is already applied |
 | Inbox is not 4 | `./scripts/demo-reset.sh` |

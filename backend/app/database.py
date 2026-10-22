@@ -1,4 +1,5 @@
 from pathlib import Path
+from sqlalchemy import inspect, text
 from sqlmodel import SQLModel, Session, create_engine, select
 from app.models import EscalationTicket
 
@@ -8,8 +9,28 @@ engine = create_engine(
 )
 
 
+def _migrate_eval_dataset_column() -> None:
+    """Add the dataset column to pre-existing evalrun tables (SQLite)."""
+    inspector = inspect(engine)
+    if "evalrun" not in inspector.get_table_names():
+        return
+    columns = {column["name"] for column in inspector.get_columns("evalrun")}
+    if "dataset" in columns:
+        return
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "ALTER TABLE evalrun ADD COLUMN dataset VARCHAR NOT NULL DEFAULT 'dev'"
+            )
+        )
+        connection.execute(
+            text("CREATE INDEX IF NOT EXISTS ix_evalrun_dataset ON evalrun (dataset)")
+        )
+
+
 def init_db() -> None:
     SQLModel.metadata.create_all(engine)
+    _migrate_eval_dataset_column()
     with Session(engine) as session:
         existing = session.exec(select(EscalationTicket)).first()
         if not existing:

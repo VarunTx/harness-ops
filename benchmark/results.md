@@ -23,6 +23,23 @@ The same 14 questions, the same model (`deepseek-chat`, temperature 0), the same
 
 ![Accuracy by harness version](../docs/screenshots/05-eval-scoreboard.png)
 
+## Held-out set
+
+Ten questions written after the harness was frozen, never shown to Loop 2, and never used for tuning.
+
+| Harness | Commit | Holdout | Escalations |
+|---|---|---|---|
+| v0 baseline | `65bb791` | 2/10 (20%) | 8 |
+| final | `f1a1925` | **10/10 (100%)** | **0** |
+
+The holdout asks the same documented behaviors with different wording and scenarios
+(a teammate's hotfix, an amended commit, a missing `NPM_TOKEN`, a CI-killed run).
+It measures whether the harness generalizes beyond the exact development questions.
+
+**Caveat:** ten questions in the same knowledge domain is a smoke test, not a
+statistical generalization claim. The next step is 40+ questions across new
+categories and multiple runs per state.
+
 ## What changed between runs
 
 **v0 → v1 (Loop 1).** Ticket #5 was resolved with:
@@ -62,7 +79,7 @@ v3 Q5 answer:
 
 ## Caveats
 
-- **No holdout.** This is the project's development set, and the Loop 2 prompt names the failure areas. 100% is an upper bound, not a generalization estimate.
+- **The development set is small**, and the Loop 2 prompt names the failure areas. The holdout is separate and stronger evidence, but ten same-domain paraphrases are still a smoke test, not a generalization guarantee.
 - **LLM judge.** Strict, but not infallible. Rationales are stored for audit.
 - **One run per state.** Temperature is 0 but provider variance exists; multiple seeds would tighten confidence.
 - **Memory writes during eval.** The agent can update user memory mid-run; those writes were reverted before each state to keep comparisons clean.
@@ -76,6 +93,8 @@ v3 Q5 answer:
 | `results/v1-*.json` | after Loop 1, harness `44cfd2f` |
 | `results/v2-*.json` | after Loop 2, harness `6135360` |
 | `results/v3-*.json` | after final-answer fix, harness `f1a1925` |
+| `results/holdout-v0-*.json` | holdout baseline, harness `65bb791` |
+| `results/holdout-v3-*.json` | holdout final, harness `f1a1925` |
 | `results/loop1-resolve.json` | Loop 1 synthesis response |
 | `results/loop2-proposal.json` | full Loop 2 proposal |
 | `results/loop2-apply.json` | apply response |

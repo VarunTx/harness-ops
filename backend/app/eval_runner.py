@@ -8,7 +8,10 @@ from app.agent import run_support_agent
 from app.llm import invoke_structured
 from app.git_hub import get_current_sha
 
-DATASET_PATH = Path(__file__).resolve().parents[1] / "eval_dataset.json"
+DATASETS = {
+    "dev": Path(__file__).resolve().parents[1] / "eval_dataset.json",
+    "holdout": Path(__file__).resolve().parents[1] / "holdout_dataset.json",
+}
 
 
 class GradeResult(BaseModel):
@@ -18,8 +21,12 @@ class GradeResult(BaseModel):
     rationale: str = Field(description="1-sentence explanation of why it passed or failed")
 
 
-def run_eval_benchmark() -> EvalRun:
-    questions = json.loads(DATASET_PATH.read_text(encoding="utf-8"))
+def run_eval_benchmark(dataset: str = "dev") -> EvalRun:
+    if dataset not in DATASETS:
+        raise ValueError(
+            f"Unknown dataset '{dataset}'. Choose one of: {', '.join(DATASETS)}"
+        )
+    questions = json.loads(DATASETS[dataset].read_text(encoding="utf-8"))
     details = []
     passed_count = 0
 
@@ -61,6 +68,7 @@ def run_eval_benchmark() -> EvalRun:
     with Session(engine) as session:
         run_record = EvalRun(
             git_commit_sha=get_current_sha(),
+            dataset=dataset,
             total_questions=total,
             passed_count=passed_count,
             accuracy_pct=accuracy,

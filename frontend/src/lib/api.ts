@@ -179,6 +179,7 @@ export type EvalDetail = {
 export type EvalRun = {
   id: number;
   git_commit_sha: string;
+  dataset: "dev" | "holdout";
   total_questions: number;
   passed_count: number;
   accuracy_pct: number;

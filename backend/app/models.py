@@ -49,6 +49,7 @@ class EvolutionProposal(SQLModel, table=True):
 class EvalRun(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     git_commit_sha: str
+    dataset: str = Field(default="dev", index=True)
     total_questions: int = Field(default=14)
     passed_count: int
     accuracy_pct: float
