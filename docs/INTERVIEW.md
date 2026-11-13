@@ -20,7 +20,7 @@ Four runs of the same 14-question set at temperature 0, graded by an LLM judge a
 
 ### 5. "Only 14 questions? Isn't that overfit?"
 
-It was, which is why I added a held-out set. The development score is an upper bound because Loop 2 is told the failure areas. The separate 10-question holdout — written after the harness was frozen and never shown to Loop 2 — went from 2/10 at baseline to 10/10 at the final. That's better evidence, but ten same-domain paraphrases are still a smoke test. The next step is 40+ questions and multiple seeds.
+It was, which is why I added a held-out set. The development score is an upper bound. In the published run, Loop 2's prompt named the failure areas. I found that in my own audit, rewrote Loop 2 so it can only use human-verified fixes and failure symptoms, and added a CI test that fails if any ground-truth fact appears in its prompt. The separate 10-question holdout — written after the harness was frozen and never shown to Loop 2 — went from 2/10 at baseline to 10/10 at the final. That's better evidence, but ten same-domain paraphrases are still a smoke test. The next step is 40+ questions and multiple seeds.
 
 ### 6. "What failed, and how did you fix it?"
 

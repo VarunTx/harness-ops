@@ -2,10 +2,16 @@ import fnmatch
 import posixpath
 from typing import Dict, Any, List
 from langchain_core.tools import tool
-from langchain_core.messages import SystemMessage, HumanMessage, ToolMessage
+from langchain_core.messages import AIMessage, SystemMessage, HumanMessage, ToolMessage
 from app.llm import get_llm
 from app.database import create_escalation_ticket
 from app.git_hub import HARNESS_ROOT, ensure_harness_initialized
+
+MAX_AGENT_STEPS = 6
+STEP_LIMIT_REPLY = (
+    "I couldn't finish checking the documentation for this question within my step limit, "
+    "so I don't have a verified answer yet."
+)
 
 
 def _check_permission(user_id: str, virtual_path: str, operation: str) -> bool:
@@ -152,8 +158,8 @@ def run_support_agent(user_id: str, question: str) -> Dict[str, Any]:
     llm_with_tools = get_llm(temperature=0.0).bind_tools(tools)
     messages = [SystemMessage(content=system_text), HumanMessage(content=question)]
 
-    # Execute up to 6 tool-calling reasoning steps
-    for _ in range(6):
+    # Execute up to MAX_AGENT_STEPS tool-calling reasoning steps
+    for _ in range(MAX_AGENT_STEPS):
         ai_msg = llm_with_tools.invoke(messages)
         messages.append(ai_msg)
         if not getattr(ai_msg, "tool_calls", None):
@@ -167,10 +173,19 @@ def run_support_agent(user_id: str, question: str) -> Dict[str, Any]:
                 obs = f"Unknown tool: {t_name}"
             messages.append(ToolMessage(content=str(obs), tool_call_id=tc["id"]))
 
-    final_reply = messages[-1].content if isinstance(messages[-1].content, str) else str(messages[-1].content)
+    last = messages[-1]
+    # If every step was spent on tool calls, the last message is a tool result
+    # (e.g. raw file contents), which must never be shown as the answer.
+    step_limit_reached = not isinstance(last, AIMessage) or bool(getattr(last, "tool_calls", None))
+    if step_limit_reached:
+        tool_steps.append({"tool": "step_limit", "input": f"{MAX_AGENT_STEPS} steps"})
+        final_reply = STEP_LIMIT_REPLY
+    else:
+        final_reply = last.content if isinstance(last.content, str) else str(last.content)
     return {
         "reply": final_reply,
         "escalated": escalation_state["escalated"],
         "ticket_id": escalation_state["ticket_id"],
         "tool_steps": tool_steps,
+        "step_limit_reached": step_limit_reached,
     }

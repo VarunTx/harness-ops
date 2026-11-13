@@ -5,7 +5,7 @@ from sqlmodel import Session
 from app.database import engine
 from app.models import EvalRun
 from app.agent import run_support_agent
-from app.llm import invoke_structured
+from app.llm import describe_model, invoke_structured
 from app.git_hub import get_current_sha
 
 DATASETS = {
@@ -46,6 +46,7 @@ def run_eval_benchmark(dataset: str = "dev") -> EvalRun:
                 f"Agent Escalated: {agent_out['escalated']}\n"
             ),
             schema=GradeResult,
+            role="judge",
         )
         if grade.passed:
             passed_count += 1
@@ -55,6 +56,7 @@ def run_eval_benchmark(dataset: str = "dev") -> EvalRun:
                 "category": item["category"],
                 "user_id": item["user_id"],
                 "question": item["question"],
+                "ground_truth": item["ground_truth"],
                 "agent_answer": agent_out["reply"],
                 "escalated": agent_out["escalated"],
                 "passed": grade.passed,
@@ -72,6 +74,8 @@ def run_eval_benchmark(dataset: str = "dev") -> EvalRun:
             total_questions=total,
             passed_count=passed_count,
             accuracy_pct=accuracy,
+            agent_model=describe_model("agent"),
+            judge_model=describe_model("judge"),
             details_json=json.dumps(details),
         )
         session.add(run_record)

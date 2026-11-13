@@ -395,8 +395,9 @@ export function EvolutionEvalTab() {
 
                   <details className="group rounded-lg border border-white/10 bg-white/[0.02]">
                     <summary className="cursor-pointer list-none px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
-                      Trace evidence · {selectedProposal.trace_summary.split("\n").length}{" "}
-                      tickets
+                      Trace evidence ·{" "}
+                      {selectedProposal.trace_summary.split("\n").filter((l) => l.startsWith("- ")).length}{" "}
+                      items
                     </summary>
                     <pre className="max-h-40 overflow-auto border-t border-white/5 px-3 py-2 font-mono text-[10.5px] leading-relaxed text-zinc-400">
                       {selectedProposal.trace_summary}
@@ -613,6 +614,19 @@ export function EvolutionEvalTab() {
                         <GitCommitHorizontal size={10} />
                         {selectedRun.git_commit_sha}
                       </span>
+                      {selectedRun.judge_model ? (
+                        <span
+                          className="font-mono text-[10px] text-zinc-500"
+                          title={
+                            selectedRun.judge_model === selectedRun.agent_model
+                              ? "The agent model graded its own answers"
+                              : "Graded by a separate judge model"
+                          }
+                        >
+                          agent {selectedRun.agent_model} · judge {selectedRun.judge_model}
+                          {selectedRun.judge_model === selectedRun.agent_model ? " (self-graded)" : ""}
+                        </span>
+                      ) : null}
                     </div>
                     <span className="text-[10px] text-zinc-600">
                       {formatDateTime(selectedRun.created_at)}

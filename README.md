@@ -73,14 +73,26 @@ It asks the same documented behaviors with new wording and scenarios — a teamm
 **What the loops actually did**
 
 1. **Loop 1** resolved Nina's escalation into `/memory/cases/case-005-archon-worktree-origin-main.md`, a global rule in `/memory/AGENTS.md`, and a private note in `/memory/users/nina/AGENTS.md` — one commit (`44cfd2f`). Omar's and Alex's related worktree questions then passed without escalation. Nina's own question still got a terse recap.
-2. **Loop 2** analyzed the latest eight traces and proposed a 23-line diff to `skills/archon-workflow-runner/SKILL.md` covering worktree origin, `.archon/.env` isolation, `--workspace-root`, and `archon worktree prune --force`. Approved and applied as `6135360`; the six remaining questions across env isolation, monorepos, and lock recovery all passed.
+2. **Loop 2** analyzed the latest eight traces and proposed a 23-line diff to `skills/archon-workflow-runner/SKILL.md` covering worktree origin, `.archon/.env` isolation, `--workspace-root`, and `archon worktree prune --force`. Approved and applied as `6135360`; the six remaining questions across env isolation, monorepos, and lock recovery all passed. **Disclosure:** in v1.0.0 the Loop 2 prompt itself named these four fixes, so this step shows that Loop 2 can write a clean, reviewable patch. It does not show that Loop 2 discovered the fixes. That prompt has since been replaced; see [Methodology update](#methodology-update-unreleased).
 3. **The final fix came from the eval, not from a feature request.** At v2, Q5 still failed because the agent called `update_user_memory` and ended the turn with “I've noted this in your profile…” — the substantive answer was dropped. The same bug caused Q1 to fail at v0. A new rule in `INSTRUCTIONS.md` (`f1a1925`) requires the final message to restate the complete answer after any tool call. v3: 14/14.
 
 ### Honest caveats
 
-- **This is a scenario benchmark, not a general capability claim.** The development set is what the project was built against, and Loop 2 is told the failure areas. The holdout is separate, but ten same-domain questions are still an upper bound.
+- **This is a scenario benchmark, not a general capability claim.** The development set is what the project was built against, and the published v1.0.0 Loop 2 run was told the failure areas (now fixed; rerun pending). The holdout is separate, but ten same-domain questions are still an upper bound.
 - **The scores are one run per state.** Temperature is 0, but provider variance exists; multiple seeds and a larger holdout are the next credibility step.
 - The judge is strict: it requires the specific mechanism and command, not a plausible summary. It graded Q5 correctly at v2.
+- The published runs were **self-graded**: `deepseek-chat` judged `deepseek-chat`. The judge can now be a separate model, and its agreement with human labels can now be measured (below).
+
+### Methodology update (unreleased)
+
+An audit of v1.0.0 found that the Loop 2 prompt named six benchmark facts word for word (`origin/main`, `.archon/.env`, `--workspace-root`, `archon worktree prune --force`, …). On `main`:
+
+- **Loop 2 is domain-agnostic.** Its prompt names no product facts. It may use only human-verified fixes from tickets, Loop 1 case files, and the *symptoms* of failed dev-set items (question, agent answer, judge rationale), never ground truth and never the holdout. It picks which file to edit, and a whitelist keeps it out of private memory and case files. `tests/test_evolution.py` fails CI if any ground-truth fact appears in the prompt.
+- **Separate judge.** Set `JUDGE_MODEL` / `JUDGE_API_KEY` / `JUDGE_BASE_URL` (any OpenAI-compatible endpoint). Each `EvalRun` records `agent_model` and `judge_model`, and the Studio flags self-graded runs.
+- **Judge audit.** `python scripts/judge_agreement.py export` writes every graded answer to a CSV. Label `human_passed`, then run `score` for agreement, Cohen's κ, and each disagreement.
+- **Step-limit bug fixed.** If the agent spent all 6 steps on tool calls, the last tool result (for example raw file contents) was returned as the answer. The agent now returns an explicit "no verified answer" reply and flags `step_limit_reached`.
+
+The v0→v3 numbers above were produced before these changes and have not yet been re-measured. Before a rerun, resolve the escalations that the v1 eval run created (Team Inbox) and only then run `/api/evolution/analyze`: Loop 2 can now use only knowledge a human has verified.
 
 ---
 
@@ -283,6 +295,7 @@ Low cost per benchmark run (pennies), OpenAI-compatible API, and a deliberate te
 - Stream responses; current chat calls take 15–30 s.
 - Add auth and per-IP rate limits before exposing the demo publicly.
 - Measure cost and p95 latency per conversation.
+- Re-run v0→v3 and the holdout with the domain-agnostic Loop 2 and an independent judge; publish judge-human agreement.
 - Multi-provider eval table (DeepSeek vs GPT-4o-mini vs Claude) on the same harness.
 
 ---
