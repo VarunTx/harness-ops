@@ -177,8 +177,11 @@ def get_proposals():
 
 @app.post("/api/evolution/analyze")
 def trigger_evolution_analysis():
-    proposal = analyze_traces_and_propose()
-    return proposal
+    try:
+        return analyze_traces_and_propose()
+    except ValueError as e:
+        # The model proposed a file outside Loop 2's write scope.
+        raise HTTPException(status_code=422, detail=str(e))
 
 
 @app.post("/api/evolution/apply/{proposal_id}")
@@ -186,7 +189,8 @@ def apply_proposal(proposal_id: int):
     try:
         return apply_evolution_proposal(proposal_id)
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        status = 404 if "not found" in str(e) else 422
+        raise HTTPException(status_code=status, detail=str(e))
 
 
 @app.get("/api/evals/runs")

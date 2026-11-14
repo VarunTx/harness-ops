@@ -53,5 +53,7 @@ class EvalRun(SQLModel, table=True):
     total_questions: int = Field(default=14)
     passed_count: int
     accuracy_pct: float
+    agent_model: Optional[str] = Field(default=None)
+    judge_model: Optional[str] = Field(default=None)
     details_json: str = Field(default="[]")
     created_at: datetime = Field(default_factory=utc_now)

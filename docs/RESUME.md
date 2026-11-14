@@ -23,6 +23,8 @@ Use the version that fits the role. Numbers are measured, not projected.
 ## What not to say
 
 - Don't say "self-improving AI." It's human-in-the-loop harness updates with evals.
-- Don't lead with "100% accuracy" without the caveat: 14-question development set, no holdout.
+- Don't lead with "100% accuracy" without the caveat: a 14-question development set plus a 10-question same-domain holdout, one run each.
+- Don't say Loop 2 "discovered" the fixes. In the v1.0.0 run its prompt named them. Say it proposes reviewable diffs, and cite re-measured numbers once the rerun with the domain-agnostic Loop 2 is done.
+- Don't call the eval independent until it runs with a separate `JUDGE_MODEL` and a published judge-human agreement number.
 - Don't say "production-ready." It's a single-node demo; say what you'd change at scale.
 - Don't lead with the stack. Lead with the problem and the measured result.

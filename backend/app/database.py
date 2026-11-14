@@ -9,20 +9,24 @@ engine = create_engine(
 )
 
 
-def _migrate_eval_dataset_column() -> None:
-    """Add the dataset column to pre-existing evalrun tables (SQLite)."""
+# Columns added to evalrun after the first release: (name, SQLite DDL).
+_EVALRUN_ADDED_COLUMNS = [
+    ("dataset", "VARCHAR NOT NULL DEFAULT 'dev'"),
+    ("agent_model", "VARCHAR"),
+    ("judge_model", "VARCHAR"),
+]
+
+
+def _migrate_evalrun_columns() -> None:
+    """Add columns introduced after v1.0.0 to pre-existing evalrun tables (SQLite)."""
     inspector = inspect(engine)
     if "evalrun" not in inspector.get_table_names():
         return
     columns = {column["name"] for column in inspector.get_columns("evalrun")}
-    if "dataset" in columns:
-        return
     with engine.begin() as connection:
-        connection.execute(
-            text(
-                "ALTER TABLE evalrun ADD COLUMN dataset VARCHAR NOT NULL DEFAULT 'dev'"
-            )
-        )
+        for name, ddl in _EVALRUN_ADDED_COLUMNS:
+            if name not in columns:
+                connection.execute(text(f"ALTER TABLE evalrun ADD COLUMN {name} {ddl}"))
         connection.execute(
             text("CREATE INDEX IF NOT EXISTS ix_evalrun_dataset ON evalrun (dataset)")
         )
@@ -30,7 +34,7 @@ def _migrate_eval_dataset_column() -> None:
 
 def init_db() -> None:
     SQLModel.metadata.create_all(engine)
-    _migrate_eval_dataset_column()
+    _migrate_evalrun_columns()
     with Session(engine) as session:
         existing = session.exec(select(EscalationTicket)).first()
         if not existing:

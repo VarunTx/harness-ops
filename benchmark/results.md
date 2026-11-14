@@ -79,8 +79,8 @@ v3 Q5 answer:
 
 ## Caveats
 
-- **The development set is small**, and the Loop 2 prompt names the failure areas. The holdout is separate and stronger evidence, but ten same-domain paraphrases are still a smoke test, not a generalization guarantee.
-- **LLM judge.** Strict, but not infallible. Rationales are stored for audit.
+- **The development set is small**, and in these runs the Loop 2 prompt named the failure areas (since replaced with a domain-agnostic prompt, guarded by `tests/test_evolution.py`; rerun pending). The holdout is separate and stronger evidence, but ten same-domain paraphrases are still a smoke test, not a generalization guarantee.
+- **LLM judge.** Strict, but not infallible, and self-graded in these runs (`deepseek-chat` judged `deepseek-chat`). Rationales are stored; `scripts/judge_agreement.py` measures agreement with human labels.
 - **One run per state.** Temperature is 0 but provider variance exists; multiple seeds would tighten confidence.
 - **Memory writes during eval.** The agent can update user memory mid-run; those writes were reverted before each state to keep comparisons clean.
 - **Two harness changes between measurements.** v3 differs from v2 only by the final-answer rule; the diff is in `final-harness/INSTRUCTIONS.md`.

@@ -38,7 +38,7 @@ A separate **10-question held-out set** went from **2/10 at baseline to 10/10 at
 
 - **The eval caught a product bug.** At 13/14, Q5 returned only *"I've noted this in your profile."* The agent had composed the answer, called `update_user_memory`, and then ended the turn with an acknowledgement; the user never saw the answer. One instruction rule fixed it, and the re-run went to 14/14. This is the strongest argument for measuring behavior rather than vibes.
 - **The tests caught a guardrail bypass.** `/memory/users/nina/../omar/AGENTS.md` matched Nina's allow rule before path resolution. The guardrail now normalizes paths, blocks `..` in globs, and denies unmatched reads by default.
-- **100% is suspicious.** The development set is small and Loop 2 is told the failure areas. That is why the holdout exists and why the README states the caveat before anyone asks.
+- **100% is suspicious.** The development set is small, and in the v1.0.0 run Loop 2's prompt named the failure areas. A later audit caught that, made Loop 2 domain-agnostic, and added a CI test that fails if any ground-truth fact leaks into its prompt. That is why the holdout exists and why the README states the caveat before anyone asks.
 
 ## Tradeoffs
 

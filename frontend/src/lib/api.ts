@@ -183,6 +183,8 @@ export type EvalRun = {
   total_questions: number;
   passed_count: number;
   accuracy_pct: number;
+  agent_model?: string | null;
+  judge_model?: string | null;
   details_json: string;
   created_at: string;
 };
